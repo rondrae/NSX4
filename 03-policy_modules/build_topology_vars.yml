@@ -1,0 +1,359 @@
+# Copyright 2018 VMware, Inc.
+# SPDX-License-Identifier: BSD-2-Clause OR GPL-3.0-only
+#
+# Variables file to deploy a simple topology
+
+{
+    "nsx_manager": "nsx-01",
+    "nsx_username": "admin",
+    "nsx_password": "xxxxxxxxx",
+    "validate_certs": "false",
+
+    "state": "present",
+
+    "tier0_gateways": [
+      {
+        "display_name": "T0 Gateway",
+        "ha_mode": "ACTIVE_ACTIVE",
+        "tags": [
+          {
+            "tag": "ansible",
+            "scope": "demo"
+          }
+        ],
+        "locale_services": [
+          {
+            "state": "present",
+            "id": "tier-0",
+            "route_redistribution_config": {
+              "redistribution_rules": [
+                "route_redistribution_types": ["TIER1_NAT","TIER1_LB_VIP","TIER1_LB_SNAT"]
+              ]
+            },
+            "edge_cluster_info": {
+              "edge_cluster_display_name": "EDGE_CLUSTER",
+            },
+            "preferred_edge_nodes_info": [
+              {
+                "edge_cluster_display_name": "EDGE_CLUSTER",
+                "edge_node_display_name": "EDGE-001"
+              }
+            ],
+            "BGP": {
+              "state": "present",
+              "local_as_num": '65002',
+              "neighbors": [
+                {
+                  "display_name": "10.10.30.10",
+                  "neighbor_address": "10.10.30.10",
+                  "remote_as_num": "651003",
+                  "state": "present"
+                },
+                {
+                  "display_name": "10.10.40.10",
+                  "neighbor_address": "10.10.40.10",
+                  "remote_as_num": "65004",
+                  "state": "present"
+                }
+              ]
+
+            },
+            "interfaces":  [
+              {
+              "display_name": "T0-GW-NorthSouth-Edge-1-Uplink-1",
+              "state": "present",
+              
+              "mtu": "9000",
+              "segment_display_name": "EDGE_UPLINK",
+              "type": "EXTERNAL",
+              "edge_node_info": {
+                  "edge_cluster_display_name": "EDGE_CLUSTER",
+                  "edge_node_display_name": "EDGE-001"
+                },
+              "subnets": [
+                {
+                "ip_addresses": "10.10.30.11",
+                "prefix_len": '24'
+                }
+              ]  
+            },
+            
+            
+              {
+              "display_name": "T0-GW-NorthSouth-Edge-1-Uplink-2",
+              "state": "present",
+              #"access_vlan_id": "10",
+              "mtu": "9000",
+              "segment_display_name": "EDGE-002",
+              "type": "EXTERNAL",
+              "edge_node_info": {
+                  "edge_cluster_display_name": "EDGE_CLUSTER",
+                  "edge_node_display_name": "EDGE-001"
+                },
+              "subnets": [
+                {
+                "ip_addresses": "10.10.30.11",
+                "prefix_len": '24'
+                }
+              ]  
+            },
+            
+            
+              {
+              "display_name": "T0-GW-NorthSouth-Edge-2-Uplink-1",
+              "state": "present",
+              #"access_vlan_id": "20",
+              "mtu": "9000",
+              "segment_display_name": "EDGE_UPLINK",
+              "type": "EXTERNAL",
+              "edge_node_info": {
+                  "edge_cluster_display_name": "EDGE_CLUSTER",
+                  "edge_node_display_name": "EDGE-002"
+                },
+              "subnets": [
+                {
+                "ip_addresses": "10.10.40.11",
+                "prefix_len": '24'
+                }
+              ]  
+            },
+            
+            
+              {
+              "display_name": "T0-GW-NorthSouth-Edge-2-Uplink-2",
+              "state": "present",
+              #"access_vlan_id": "20",
+              "mtu": "9000",
+              "segment_display_name": "EDGE-002",
+              "type": "EXTERNAL",
+              "edge_node_info": {
+                  "edge_cluster_display_name": "EDGE_CLUSTER",
+                  "edge_node_display_name": "EDGE-002"
+                },
+              "subnets": [
+                {
+                "ip_addresses": "10.10.40.11",
+                "prefix_len": '24'
+                }
+              ]  
+            }
+            ]
+            
+          }
+        ]
+      }
+    ],
+    
+
+    "tier1_gateways": [
+      {
+        "display_name": "T1_GW",
+        "tier0_display_name": "T0 Gateway",
+        "failover_mode":"ACTIVE_STANDBY",
+        "tags": [
+          {
+            "tag": "tier",
+            "scope": "one"
+          }
+        ]
+      }
+    ],
+
+    "segments": [
+        {
+            "display_name": "EDGE-003-test",
+            "tz": "VLAN-TZ",
+            "domain_name": "home.lab",
+            "vlan_ids": ["10"],
+            "tags": [
+                {
+                  "tag": "name",
+                  "scope": "edge 01 segment"
+                },
+                {
+                  "tag": "name",
+                  "scope": "edge 01 segment"
+                }
+            ]
+            
+        },
+        {
+            "display_name": "EDGE-004-test",
+            "tz": "VLAN-TZ",
+            "domain_name": "home.lab",
+            "vlan_ids": ["20"],
+            "tags": [
+                {
+                  "tag": "name",
+                  "scope": "edge 02 segment"
+                },
+                {
+                  "tag": "name",
+                  "scope": "edge 02 segment"
+                }
+            ]
+            
+        },
+        
+    ],
+    "mygroups": [
+        {
+            "display_name": "PUBLIC_SUBNET",
+            "domain_id": "default",
+            "expression": [
+                {
+                    "ip_addresses": ["50.25.60.0/23"],            
+                    "resource_type": "IPAddressExpression"
+                }
+            ]
+        },  
+        {
+            "display_name": "T0-Uplink-Subnets",
+            "domain_id": "default",
+            "expression": [
+                {
+                    "ip_addresses": ["10.10.30.0/24","10.10.40.0/24"],            
+                    "resource_type": "IPAddressExpression"
+                }
+            ]
+        }  
+    ],
+    
+    "gateway_policies": [
+      {
+        "display_name": "BGP",
+        "state": "present",
+        "domain_id": "default",
+        "locked": False,
+        "category": "LocalGatewayRules",
+        "rules": [
+            {
+              "action": "ALLOW",
+              "display_name": "Uplinks",
+              "source_groups": [
+                "/infra/domains/default/groups/T0-Uplink-Subnets"
+              ],
+              "destination_groups": [
+                "/infra/domains/default/groups/T0-Uplink-Subnets"
+              ],
+              "services": [
+                "ANY"
+              ],
+              "ip_protocol": "IPV4",
+              "scope": [
+                "/infra/tier-0s/T0 Gateway"
+              ],
+              
+            }
+          ]
+      },
+      {
+        "display_name": "Public_Access",
+        "state": "present",
+        "domain_id": "default",
+        "locked": False,
+        "category": "LocalGatewayRules",
+        "rules": [
+            {
+              "action": "ALLOW",
+              "display_name": "Any_to_Public_Range",
+              "source_groups": [
+                "ANY"
+              ],
+              "destination_groups": [
+                "/infra/domains/default/groups/PUBLIC_SUBNET"
+              ],
+              "services": [
+                "ANY"
+              ],
+              "ip_protocol": "IPV4",
+              "scope": [
+                "/infra/tier-0s/T0 Gateway"
+              ]
+              
+            },
+            {
+              "action": "ALLOW",
+              "display_name": "Public_Range_to_Any",
+              "source_groups": [
+                "/infra/domains/default/groups/PUBLIC_SUBNET"
+                
+              ],
+              "destination_groups": [
+                "ANY"
+              ],
+              "services": [
+                "ANY"
+              ],
+              "ip_protocol": "IPV4",
+              "scope": [
+                "/infra/tier-0s/T0 Gateway"
+              ],
+              
+            },
+          ]
+      },
+      {
+        "display_name": "ICMP",
+        "state": "present",
+        "domain_id": "default",
+        "locked": False,
+        "category": "LocalGatewayRules",
+        "rules": [
+            {
+              "action": "ALLOW",
+              "display_name": "ICMP-Any",
+              "source_groups": [
+                "ANY"
+              ],
+              "destination_groups": [
+                "ANY"
+              ],
+              "services": [
+                "/infra/services/ICMP_Destination_Unreachable",
+                "/infra/services/ICMP_Echo_Reply",
+                "/infra/services/ICMP_Echo_Request"
+              ],
+              "ip_protocol": "IPV4",
+              "scope": [
+                "/infra/tier-0s/T0 Gateway"
+              ],
+              
+            }
+          ]
+      },
+      {
+        "display_name": "Policy_Default_Infra-tier0-T0 Gateway",
+        #"id": "Policy_Default_Infra-tier0-T0 Gateway",
+        #"path": "/infra/domains/default/gateway-policies/default",
+        "state": "present",
+        "domain_id": "default",
+        "locked": False,
+        "category": "Default",
+        "rules": [
+            {
+              "action": "ALLOW",
+              "display_name": "default_rule",
+              "source_groups": [
+                "ANY"
+              ],
+              "destination_groups": [
+                "ANY"
+              ],
+              "services": [
+                "ANY"
+              ],
+              "ip_protocol": "IPV4",
+              "scope": [
+                "/infra/tier-0s/T0 Gateway"
+              ],
+              
+            }
+          ]
+      },
+      
+    ]
+    
+
+
+}

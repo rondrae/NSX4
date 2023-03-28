@@ -1,0 +1,371 @@
+# Copyright 2018 VMware, Inc.
+# SPDX-License-Identifier: BSD-2-Clause OR GPL-3.0-only
+#
+#
+# Variables file for Day-0/1 setup
+# Creates the following:
+#   - 2 Transport Zones
+#   - 1 IP Pool (used by Edge)
+#   - 1 Transport Node Profile with 2 TZ endpoints
+#   - 2 Edge Transport Nodes
+#   - 2 ESX Host Transport Nodes
+#   - 1 Edge Cluster with the 2 Edge Nodes
+#
+{
+
+  #
+  # Flag to create or delete all the objects
+  # Accepts: 'present' to create; 'absent' to delete
+  #
+  "state": "present",
+
+  #
+  # Common NSX Appliance variables
+  #
+  "nsx_username": "admin",
+  "nsx_password": "xxxxxxxxxx",
+  "validate_certs": False,
+
+  #
+  # First NSX appliance node. Defined separate based on the consumption.
+  # Accepts both IP (IPv4) and FQDN for 'mgmt_ip'
+  #
+  "nsx_node1": {
+    "hostname": "nsx-01",
+    "mgmt_ip": "10.10.10.13",
+    "datacenter": "DC",
+    "cluster": "cluster",
+    "datastore": "storage",
+    "portgroup": "mgmt"
+  },
+
+  
+  "edge_uplink_profile": [
+    
+    {
+      "display_name": "Edge-Uplink-Profile",
+      "mtu": 9000,
+      "teaming": {
+        "active_list": [
+          {
+            "uplink_name": "uplink-1",
+            "uplink_type": "PNIC"
+          },
+          {
+            "uplink_name": "uplink-2",
+            "uplink_type": "PNIC"
+          }
+        ],
+        "policy": "LOADBALANCE_SRCID"
+      },
+      "transport_vlan": 20
+    }
+
+  ],
+  "host_uplink_profile": [
+    {
+      "display_name": "Host-Uplink-Profile",
+      "teaming": {
+        "active_list": [
+          {
+            "uplink_name": "uplink-1",
+            "uplink_type": "PNIC"
+          },
+          {
+            "uplink_name": "uplink-2",
+            "uplink_type": "PNIC"
+          }
+        ],
+        "policy": "LOADBALANCE_SRCID"
+      },
+      "transport_vlan": 20
+    }
+  ],
+
+
+
+  "transport_zones": [
+    {
+      "display_name": "Overlay",
+      "description": "NSX Configured Overlay Transport Zone",
+      "transport_type": "OVERLAY_BACKED",
+      "host_switch_name": "Dswitch"
+    },
+    {
+      "display_name": "VLAN-TZ",
+      "description": "NSX Configured VLAN Transport Zone",
+      "transport_type": "VLAN_BACKED",
+      "host_switch_name": "Dswitch"
+    }
+  ],
+
+  "ip_pools": [
+    {
+      "display_name": "TEP-Pool",
+      "pool_static_subnets": [
+        {
+          "display_name": "TEP-Pool",
+          "state": "present",
+          "description":"vlan 20",
+          "allocation_ranges": [
+            {
+              "start": "10.10.20.10",
+              "end": "10.10.20.200"
+            }
+          ],
+          "gateway_ip": "10.10.20.254",
+          "cidr": "10.10.20.0/24",
+          "dns_nameservers":"10.10.20.25"
+        }
+      ]
+    }
+  ],
+
+  "transport_node_profiles": [
+    {
+      "display_name": "Trans_Profile",
+      "description": "Compute Transport Node Profile",
+      "host_switches": [
+        {
+
+          "host_switch_name": "Dswitch",
+          "host_switch_id": "50 35 17 4a 3d be 59 37-57 d0 0d 03 11 ae 7e a2",
+          "host_switch_type": "VDS",
+          "host_switch_mode": "STANDARD",
+          "host_switch_profiles": [
+            {
+              "name": "nsx-edge-multiple-vteps-uplink-profile",
+              "type": "UplinkHostSwitchProfile"
+            }
+          ],
+          "pnics": [],
+          "uplinks": [
+            {
+              "vds_uplink_name": "Uplink 1",
+              "uplink_name": "uplink-1"
+            },
+            {
+              "vds_uplink_name": "Uplink 2",
+              "uplink_name": "uplink-2"
+            }
+          ],
+          "ip_assignment_spec": {
+              "resource_type": "StaticIpPoolSpec",
+              "ip_pool_name": "TEP-Pool"
+          },
+          "transport_zone_endpoints": [
+            {
+              "transport_zone_name": "Overlay"
+            },
+            {
+              "transport_zone_name": "VLAN-TZ"
+            }
+          ]
+        }
+      ],
+      "transport_zone_endpoints": []
+    }
+  ],
+
+
+  "transport_node_collections": [
+    {
+      "state": "present",
+      "display_name": "Trans_Node_COllection",
+      "description": "TNP  ",
+      "resource_type": "TransportNodeCollection",
+      "compute_manager_name": "vcenter.home.lab",
+      "cluster_name": "cluster",
+      "transport_node_profile_name": "Trans_Profile"
+    }
+  ],
+
+
+  "transport_nodes": [
+    {
+      "display_name": "EDGE_TN-001",
+      "description": "NSX Edge Node 01",
+      "host_switches": [
+        {
+          "host_switch_name": "NVDS",
+          "host_switch_type": "NVDS",
+          "host_switch_mode": "STANDARD",
+          "host_switch_profiles": [
+            {
+              "name": "UPlink-Profile",
+              "type": "UplinkHostSwitchProfile"
+            }
+          ],
+          "pnics": [
+            {
+              "device_name": "fp-eth0",
+              "uplink_name": "uplink-1"
+            },
+            {
+              "device_name": "fp-eth1",
+              "uplink_name": "uplink-2"
+            }
+          ],
+          "ip_assignment_spec":
+            {
+              "resource_type": "StaticIpPoolSpec",
+              "ip_pool_name": "TEP-Pool"
+            },
+          "transport_zone_endpoints": [
+            {
+              "transport_zone_name": "Overlay"
+            },
+            {
+              "transport_zone_name": "VLAN-TZ"
+            }
+            
+          ]
+        }
+      ],
+      "transport_zone_endpoints": [],
+      "node_deployment_info": {
+        "deployment_type": "VIRTUAL_MACHINE",
+        "deployment_config": {
+          "form_factor": "LARGE",
+          "vm_deployment_config": {
+            "vc_name": "vcenter.home.lab",
+            "vc_username": "administrator@vsphere.local",
+            "vc_password": "xxxxxxxx",
+            "storage": "datastore",
+            "compute": "cluster",
+            "host": "host-01.home.lab",
+            "data_networks": [
+              "dvpg_TRUNK_NSX",
+              "dvpg_TRUNK_NSX",
+              "dvpg_TRUNK_NSX",
+              "mgmt"
+            ],
+            "default_gateway_addresses": [ "10.10.10.1" ],
+            "management_network": "mgmt",
+            "management_port_subnets": [
+              {
+                "ip_addresses": [ "10.10.10.50" ],
+                "prefix_length": 24
+              }
+            ],
+            "placement_type": "VsphereDeploymentConfig"
+          },
+          "node_user_settings": {
+            "cli_username": "admin" ,
+            "root_password": "xxxxxxxxxx",
+            "cli_password": "xxxxxxxxx",
+            "audit_username": "audit",
+            "audit_password": "xxxxxxxxxx"
+          }
+        },
+        "node_settings": {
+          "allow_ssh_root_login": "True",
+          "enable_ssh": "True",
+          "hostname": "edge01.home.lab"
+        },
+        "resource_type": "EdgeNode",
+        "display_name": "EDGE-001"
+      }
+    },
+    {
+      "display_name": "EDGE-002",
+      "description": "NSX Edge Node 02",
+      "host_switches": [
+        {
+          "host_switch_name": "NVDS",
+          "host_switch_type": "NVDS",
+          "host_switch_mode": "STANDARD",
+          "host_switch_profiles": [
+            {
+              "name": "UPlink-Profile",
+              "type": "UplinkHostSwitchProfile"
+            }
+          ],
+          "pnics": [
+            {
+              "device_name": "fp-eth0",
+              "uplink_name": "uplink-1"
+            },
+            {
+              "device_name": "fp-eth1",
+              "uplink_name": "uplink-2"
+            }
+          ],
+          "ip_assignment_spec":
+            {
+              "resource_type": "StaticIpPoolSpec",
+              "ip_pool_name": "TEP-Pool"
+            },
+          "transport_zone_endpoints": [
+            {
+              "transport_zone_name": "Overlay"
+            },
+            {
+              "transport_zone_name": "VLAN-TZ"
+            }
+            
+          ]
+        }
+      ],
+      "transport_zone_endpoints": [],
+      "node_deployment_info": {
+        "deployment_type": "VIRTUAL_MACHINE",
+        "deployment_config": {
+          "form_factor": "LARGE",
+          "vm_deployment_config": {
+            "vc_name": "vcenter.home.lab",
+            "vc_username": "administrator@vsphere.local",
+            "vc_password": "xxxxxxxxxxx",
+            "storage": "datastore",
+            "compute": "cluster",
+            "host": "host-02.home.lab",
+            "data_networks": [
+              "dvpg_TRUNK_NSX",
+              "dvpg_TRUNK_NSX",
+              "dvpg_TRUNK_NSX",
+              "mgmt"
+            ],
+            "default_gateway_addresses": [ "10.10.10.1" ],
+            "management_network": "mgmt",
+            "management_port_subnets": [
+              {
+                "ip_addresses": [ "10.10.10.60" ],
+                "prefix_length": 24
+              }
+            ],
+            "placement_type": "VsphereDeploymentConfig"
+          },
+          "node_user_settings": {
+            "cli_username": "admin" ,
+            "root_password": "xxxxxxxxx",
+            "cli_password": "xxxxxxxxx",
+            "audit_username": "audit",
+            "audit_password": "xxxxxxxxx"
+          }
+        },
+        "node_settings": {
+          "allow_ssh_root_login": "True",
+          "enable_ssh": "True",
+          "hostname": "edge-02.home.lab"
+        },
+        "resource_type": "EdgeNode",
+        "display_name": "EDGE-002"
+      }
+    }
+    
+    
+  ],
+
+  "edge_clusters": [
+    {
+      "display_name": "EDGE_CLUSTER",
+      "cluster_profile_bindings": [
+        { "profile_name": "nsx-default-edge-high-availability-profile" }
+      ],
+      "members": [
+        { "transport_node_name": "EDGE-001" },
+        { "transport_node_name": "EDGE-002" }
+      ]
+    }
+  ]
+}
