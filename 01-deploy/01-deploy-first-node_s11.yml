@@ -1,15 +1,9 @@
-# Copyright 2018 VMware, Inc.
-# SPDX-License-Identifier: BSD-2-Clause OR GPL-3.0-only
----
-#
-# Playbook to deploy the first NSX Appliance node. Also checks the node
-# status
-#
+
 - hosts: 127.0.0.1
   connection: local
   become: yes
   vars_files:
-    - deploy_nsx_cluster_vars_s11.yml
+    - deploy_nsx_cluster_vars.yml
   tasks:
     - name: deploy NSX Manager OVA
       vmware.ansible_for_nsxt.nsxt_deploy_ova:
@@ -36,8 +30,7 @@
         vcenter_user: "{{ compute_managers[0]['username'] }}"
         vcenter_passwd: "{{ compute_managers[0]['password'] }}"
         deployment_size: "medium"
-        # Note: The role below is for NSX 2.5 and above. For prior
-        # release, the role should be "nsx-manager nsx-controller"
+        
         role: "NSX Manager"
 
     - name: Check manager status

@@ -1,14 +1,11 @@
-# Copyright 2018 VMware, Inc.
-# SPDX-License-Identifier: BSD-2-Clause OR GPL-3.0-only
+
 ---
-#
-# Playbook to register Compute Managers with NSX Appliance
-#
+
 - hosts: 127.0.0.1
   connection: local
   become: yes
   vars_files:
-    - deploy_nsx_cluster_vars_s11.yml
+    - deploy_nsx_cluster_vars.yml
   tasks:
     - name: Register compute manager
       vmware.ansible_for_nsxt.nsxt_fabric_compute_managers:
