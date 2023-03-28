@@ -1,0 +1,97 @@
+# Copyright 2018 VMware, Inc.
+# SPDX-License-Identifier: BSD-2-Clause OR GPL-3.0-only
+#
+# Variables file for deploying NSX-T Cluster
+#
+{
+
+  #
+  # Common NSX Appliance variables
+  #
+  "nsx_username": "admin",
+  "nsx_password": "xxxxxxxxxxxxxx",
+  "cli_password": "xxxxxxxxxxxxxxxx",
+  "validate_certs": False,
+  "state": "present",
+
+  #
+  # OVA/OVF Information. Path can be on local file system or a HTTP URL
+  #
+  "nsx_ova_path": "/download/ova",
+#  "nsx_ova": "nsx-unified-appliance-3.0.0.0.0.15946739.ova",
+  "nsx_ova": "nsx-unified-appliance-4.1.0.0.0.21332677.ova",
+
+  #
+  # Common network details. This assumes all NSX appliance nodes are on the
+  # same subnet. If there is a need to deploy NSX appliance nodes which are
+  # on different subnets, add node specific details in the blocks below and
+  # use them in the playbooks instead.
+  #
+  "domain": "home.lab",
+  "netmask": "255.255.255.0",
+  "gateway": "10.10.10.1",
+  "dns_server": "10.10.10.2",
+  "ntp_server": "10.10.10.3",
+
+  #
+  # First NSX appliance node. Defined separate based on the consumption.
+  # Accepts both IP (IPv4) and FQDN for 'mgmt_ip'
+  #
+  "nsx_node1": {
+    "hostname": "nsx-01",
+    "mgmt_ip": "10.10.10.13",
+    "datacenter": "DC",
+    "cluster": "cluster",
+    "datastore": "storage",
+    "portgroup": "mgmt"
+  },
+
+  #
+  # Additional nodes defined as an array so that its easier to iterate
+  # through them in the playbook.
+  #
+  "additional_nodes": [
+    {
+      "hostname": "nsx-02",
+      "mgmt_ip": "10.10.10.10",
+      "prefix": "24",
+      "datacenter": "DC",
+      "cluster": "cluster",
+      "datastore": "storage",
+      "portgroup": "mgmt"
+    },
+    {
+      "hostname": "11CAL01-80F-003",
+      "mgmt_ip": "10.10.10.11",
+      "prefix": "24",
+      "datacenter": "DC",
+      "cluster": "cluster",
+      "datastore": "storage",
+      "portgroup": "mgmt"
+    }
+  ],
+
+  #
+  # One or more compute managers that have to be registered with NSX
+  #
+  "compute_managers": [
+    {
+      "display_name": "vcenter",
+      "mgmt_ip": "vcenter.home.lab",
+      "origin_type": "vCenter",
+      "credential_type": "UsernamePasswordLoginCredential",
+      "username": "administrator@vsphere.local",
+      "password": "xxxxxxxx"
+    }
+  ],
+
+  
+  #
+  # NSX-T licenses
+  #
+  "nsxt_licenses": [
+    {
+      "license_key": "XXXX-XXXX-XXXX"
+    }
+  ],
+}
