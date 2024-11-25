@@ -1,2 +1,2 @@
 # NSX4
-NSX 4.1 deployment and configuration
+Using ANSIBLE to deploy and configure NSX 4.1
