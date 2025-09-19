@@ -4,18 +4,17 @@
 # Variables file to deploy a simple topology
 
 {
-    "nsx_manager": "10.110.20.237",
-    "nsx_username": "admin",
-    "nsx_password": "9f3OiL%s7PMj",
+    "nsx_manager": "nsx_manager_IP",
+    "nsx_username": "nsx_username",
+    "nsx_password": "nsx_password",
     "validate_certs": "false",
 
     "state": "present",
 
-   
     "tier0_gateways": [
       {
-        "display_name": "T0_GW_11CAL01-822-001",
-        "ha_mode": "ACTIVE_ACTIVE",
+        "display_name": "Tier-0",
+        "ha_mode": "ACTIVE_STANDBY",
         "tags": [
           {
             "tag": "ansible",
@@ -25,122 +24,25 @@
         "locale_services": [
           {
             "state": "present",
-            #"id": "tier-0",
+            "id": "test-t0ls",
             "route_redistribution_config": {
-              "bgp_enabled": True,
               "redistribution_rules": [
-                "route_redistribution_types": ["TIER1_NAT","TIER1_LB_VIP","TIER1_LB_SNAT"]
+                "route_redistribution_types": ["TIER0_STATIC", "TIER0_NAT"]
               ]
             },
             "edge_cluster_info": {
-              "edge_cluster_display_name": "EDGE_CLUSTER_11CAL01-821-001",
+              "edge_cluster_display_name": "Edge-Cluster-01",
             },
             "preferred_edge_nodes_info": [
               {
-                "edge_cluster_display_name": "EDGE_CLUSTER_11CAL01-821-001",
-                "edge_node_display_name": "EDGE_TN_11CAL01-808-001"
+                "edge_cluster_display_name": "Edge-Cluster-01",
+                "edge_node_display_name": "EdgeNode-01"
               }
             ],
             "BGP": {
               "state": "present",
-              "local_as_num": '65119',
-              "neighbors": [
-                {
-                  "display_name": "10.252.251.1",
-                  "neighbor_address": "10.252.251.1",
-                  "remote_as_num": "65111",
-                  "state": "present"
-                },
-                {
-                  "display_name": "10.252.252.1",
-                  "neighbor_address": "10.252.252.1",
-                  "remote_as_num": "65112",
-                  "state": "present"
-                }
-              ]
-
-            },
-            "interfaces":  [
-              {
-              "display_name": "T0-GW-NorthSouth-Edge-1-Uplink-1",
-              "state": "present",
-              #"access_vlan_id": "911",
-              "mtu": "9000",
-              "segment_display_name": "EDGE_UPLINK_11CAL01-812-001",
-              "type": "EXTERNAL",
-              "edge_node_info": {
-                  "edge_cluster_display_name": "EDGE_CLUSTER_11CAL01-821-001",
-                  "edge_node_display_name": "EDGE_TN_11CAL01-808-001"
-                },
-              "subnets": [
-                {
-                "ip_addresses": "10.255.251.11",
-                "prefix_len": '24'
-                }
-              ]  
-            },
-            
-            
-              {
-              "display_name": "T0-GW-NorthSouth-Edge-1-Uplink-2",
-              "state": "present",
-              #"access_vlan_id": "911",
-              "mtu": "9000",
-              "segment_display_name": "EDGE_UPLINK_11CAL01-812-002",
-              "type": "EXTERNAL",
-              "edge_node_info": {
-                  "edge_cluster_display_name": "EDGE_CLUSTER_11CAL01-821-001",
-                  "edge_node_display_name": "EDGE_TN_11CAL01-808-001"
-                },
-              "subnets": [
-                {
-                "ip_addresses": "10.255.252.11",
-                "prefix_len": '24'
-                }
-              ]  
-            },
-            
-            
-              {
-              "display_name": "T0-GW-NorthSouth-Edge-2-Uplink-1",
-              "state": "present",
-              #"access_vlan_id": "912",
-              "mtu": "9000",
-              "segment_display_name": "EDGE_UPLINK_11CAL01-812-001",
-              "type": "EXTERNAL",
-              "edge_node_info": {
-                  "edge_cluster_display_name": "EDGE_CLUSTER_11CAL01-821-001",
-                  "edge_node_display_name": "EDGE_TN_11CAL01-808-002"
-                },
-              "subnets": [
-                {
-                "ip_addresses": "10.255.251.12",
-                "prefix_len": '24'
-                }
-              ]  
-            },
-            
-            
-              {
-              "display_name": "T0-GW-NorthSouth-Edge-2-Uplink-2",
-              "state": "present",
-              #"access_vlan_id": "912",
-              "mtu": "9000",
-              "segment_display_name": "EDGE_UPLINK_11CAL01-812-002",
-              "type": "EXTERNAL",
-              "edge_node_info": {
-                  "edge_cluster_display_name": "EDGE_CLUSTER_11CAL01-821-001",
-                  "edge_node_display_name": "EDGE_TN_11CAL01-808-002"
-                },
-              "subnets": [
-                {
-                "ip_addresses": "10.255.252.12",
-                "prefix_len": '24'
-                }
-              ]  
+              "local_as_num": '1211'
             }
-            ]
-            
           }
         ]
       }
@@ -161,10 +63,10 @@
 
     "segments": [
         {
-            "display_name": "EDGE_UPLINK_11CAL01-812-001",
+            "display_name": "Web-Segment",
             "tier1_display_name": "Tier-1",
-            "tz": "VLAN-TZ_11CAL01-819-002",
-            "domain_name": "s11.res.calligo.cloud",
+            "tz": "Overlay-TZ",
+            "domain_name": "mylab.net",
             "subnets": [
                 {
                   "gateway_address": "192.168.10.1/24"
@@ -172,21 +74,20 @@
             ],
             "tags": [
                 {
-                  "tag": "name",
-                  "scope": "edge 01 segment"
+                  "tag": "ansible",
+                  "scope": "demo"
                 },
                 {
-                  "tag": "name",
-                  "scope": "edge 01 segment"
+                  "tag": "web",
+                  "scope": "east"
                 }
-            ],
-            "vlan_ids": "911"
+            ]
         },
         {
-            "display_name": "EDGE_UPLINK_11CAL01-812-002",
+            "display_name": "App-Segment",
             "tier1_display_name": "Tier-1",
-            "tz": "VLAN-TZ_11CAL01-819-002",
-            "domain_name": "s11.res.calligo.cloud",
+            "tz": "Overlay-TZ",
+            "domain_name": "mylab.net",
             "subnets": [
                 {
                   "gateway_address": "192.168.20.1/24"
@@ -194,37 +95,36 @@
             ],
             "tags": [
                 {
-                  "tag": "name",
-                  "scope": "edge 02 segment"
+                  "tag": "ansible",
+                  "scope": "demo"
                 },
                 {
-                  "tag": "name",
-                  "scope": "edge 02 segment"
+                  "tag": "app",
+                  "scope": "east"
+                }
+            ]
+        },
+        {
+            "display_name": "DB-Segment",
+            "tier1_display_name": "Tier-1",
+            "tz": "Overlay-TZ",
+            "domain_name": "mylab.net",
+            "subnets": [
+                {
+                  "gateway_address": "192.168.30.1/24"
                 }
             ],
-            "vlan_ids": "912"
-        },
-        # {
-        #     "display_name": "DB-Segment",
-        #     "tier1_display_name": "Tier-1",
-        #     "tz": "Overlay-TZ",
-        #     "domain_name": "mylab.net",
-        #     "subnets": [
-        #         {
-        #           "gateway_address": "192.168.30.1/24"
-        #         }
-        #     ],
-        #     "tags": [
-        #         {
-        #           "tag": "ansible",
-        #           "scope": "demo"
-        #         },
-        #         {
-        #           "tag": "db",
-        #           "scope": "east"
-        #         }
-        #     ]
-        # }
+            "tags": [
+                {
+                  "tag": "ansible",
+                  "scope": "demo"
+                },
+                {
+                  "tag": "db",
+                  "scope": "east"
+                }
+            ]
+        }
     ],
 
 # Note: 'group' is a reserved key. Cant use it here.
