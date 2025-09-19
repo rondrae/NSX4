@@ -57,7 +57,7 @@
       "portgroup": "mgmt"
     },
     {
-      "hostname": "11CAL01-80F-003",
+      "hostname": "nsx-03",
       "mgmt_ip": "10.10.10.11",
       "prefix": "24",
       "datacenter": "DC",
